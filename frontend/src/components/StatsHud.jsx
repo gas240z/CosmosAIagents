@@ -24,7 +24,7 @@ export default function StatsHud({ state }) {
     </div>
   )
   return (
-    <div className="glass pointer-events-none absolute left-3 top-3 z-20 hidden items-center divide-x divide-white/10 py-1.5 sm:flex">
+    <div className="glass pointer-events-auto hidden max-w-full items-center divide-x divide-white/10 overflow-hidden py-1.5 sm:flex">
       <Item icon={Cpu} v={`${act}/4`} l="агентов" c="#2fe3a1" />
       <Item icon={ListChecks} v={`${done}/${state.tasks.length || 0}`} l="задач" c="#7a8bff" />
       <Item icon={Files} v={files} l="файлов" c="#ff8a1f" />

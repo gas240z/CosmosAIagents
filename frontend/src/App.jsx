@@ -86,10 +86,10 @@ export default function App() {
     <div className="relative flex min-h-screen min-w-0 flex-col gap-3 overflow-x-hidden p-3 lg:h-screen lg:overflow-hidden">
       <SpaceBackground light={light} />
 
-      <header className="glass flex flex-wrap items-center gap-3 px-4 py-3">
+      <header className="glass flex flex-wrap items-center gap-2 px-4 py-3 sm:gap-3">
         <div className="flex items-center gap-2">
           <motion.span animate={reduced ? {} : { rotate: 360 }} transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}><Orbit size={22} className="text-sky-300" /></motion.span>
-          <h1 className="font-display text-base font-black uppercase tracking-[.2em] text-white neon-text sm:text-lg">Agent <span className="text-fuchsia-300">Orchestra</span></h1>
+          <h1 className="font-display text-base font-black uppercase tracking-[.2em] text-white neon-text sm:text-lg"><span className="max-sm:hidden">Agent </span><span className="text-fuchsia-300">Orchestra</span></h1>
           <Sparkles size={14} className="hidden text-amber-300 sm:block" />
         </div>
         <form onSubmit={submit} className="order-3 flex min-w-0 flex-1 basis-full items-center gap-2 lg:order-none lg:basis-0">
@@ -102,18 +102,20 @@ export default function App() {
             <button type="submit" className="btn-neon" disabled={!prompt.trim() || noKeys}><Send size={15} /> Отправить</button>
           )}
         </form>
-        <button className="btn-ghost relative" onClick={() => setMemOpen(true)} aria-label="Память" title="Память миссий">
+        <div className="order-2 ml-auto flex items-center gap-2 lg:order-none">
+        <button className="btn-ghost relative max-sm:!px-2.5" onClick={() => setMemOpen(true)} aria-label="Память" title="Память миссий">
           <BookMarked size={16} className="text-amber-400" />
           {mem.items.length > 0 && <span className="absolute -right-1 -top-1 grid h-4 min-w-[16px] place-items-center rounded-full bg-amber-400 px-1 text-[9px] font-bold text-[#2a1600]">{mem.items.length}</span>}
         </button>
-        <button className="btn-ghost" onClick={() => setLight(!light)} aria-label={light ? 'Тёмная тема' : 'Светлая тема'} title={light ? 'Тёмная тема' : 'Светлая тема'}>
+        <button className="btn-ghost max-sm:!px-2.5" onClick={() => setLight(!light)} aria-label={light ? 'Тёмная тема' : 'Светлая тема'} title={light ? 'Тёмная тема' : 'Светлая тема'}>
           <AnimatePresence mode="wait" initial={false}>
             <motion.span key={light ? 's' : 'm'} className="grid place-items-center" initial={{ rotate: -90, scale: 0, opacity: 0 }} animate={{ rotate: 0, scale: 1, opacity: 1 }} exit={{ rotate: 90, scale: 0, opacity: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 18 }}>
               {light ? <Sun size={16} className="text-amber-500" /> : <Moon size={16} className="text-sky-200" />}
             </motion.span>
           </AnimatePresence>
         </button>
-        <button className="btn-ghost" onClick={() => { load(); setOpen(true) }} aria-label="Настройки"><Settings size={16} /></button>
+        <button className="btn-ghost max-sm:!px-2.5" onClick={() => { load(); setOpen(true) }} aria-label="Настройки"><Settings size={16} /></button>
+        </div>
       </header>
 
       {(err || state.fatal || noKeys) && (
@@ -130,20 +132,24 @@ export default function App() {
 
       <main className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)] gap-3 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="relative h-[68vh] min-h-[460px] lg:h-auto">
-          <StatsHud state={state} />
           <Stage agents={agents} core={state.core} orch={orch} bus={bus} selected={selected} onSelect={setSelected} tools={state.tools} />
+          {/* верхняя строка: статистика слева, фаза справа — в одном flex-ряду, чтобы не накладывались */}
+          <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex flex-wrap items-start justify-between gap-2">
+            <StatsHud state={state} />
+            <AnimatePresence mode="wait">
+              {state.phaseLabel && state.running && (
+                <motion.div key={state.phaseLabel} initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                  className="glass ml-auto whitespace-nowrap px-4 py-2 font-display text-[11px] uppercase tracking-[.2em] text-sky-100">{state.phaseLabel}</motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          {/* подсказки — внизу сцены, не пересекаются с верхней строкой */}
           {idle && !state.prompt && !state.chat && (
-            <div className="pointer-events-none absolute inset-x-0 top-3 z-20 flex flex-wrap justify-center gap-2 px-3">
-              {EXAMPLES.map((x) => (
-                <button key={x} type="button" className="btn-ghost pointer-events-auto !py-1.5 text-[11.5px]" onClick={() => setPrompt(x)}>{x}</button>
+            <div className="pointer-events-none absolute inset-x-0 bottom-3 z-20 flex flex-wrap justify-center gap-2 px-3">
+              {EXAMPLES.map((x, i) => (
+                <button key={x} type="button" className={`btn-ghost pointer-events-auto !py-1.5 text-[11.5px] ${i > 1 ? 'max-sm:hidden' : ''}`} style={{ backdropFilter: 'blur(8px)' }} onClick={() => setPrompt(x)}>{x}</button>
               ))}
             </div>
-          )}
-          {state.phaseLabel && state.running && (
-            <AnimatePresence mode="wait">
-              <motion.div key={state.phaseLabel} initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                className="glass pointer-events-none absolute left-1/2 top-3 z-20 -translate-x-1/2 px-4 py-1.5 font-display text-[11px] uppercase tracking-[.2em] text-sky-100">{state.phaseLabel}</motion.div>
-            </AnimatePresence>
           )}
           <ChatReply chat={chatOpen ? state.chat : null} question={state.prompt} remembered={state.remembered} onClose={() => setChatOpen(false)} reduced={reduced} />
           <MissionComplete done={state.done} onNew={() => { reset(); setPrompt('') }} />
